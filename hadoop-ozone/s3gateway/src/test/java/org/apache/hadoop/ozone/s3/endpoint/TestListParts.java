@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -126,12 +127,11 @@ public class TestListParts {
 
   @Test
   public void testListPartsWithUnknownUploadID() throws Exception {
-    try {
-      rest.get(OzoneConsts.S3_BUCKET, OzoneConsts.KEY, 0,
-          uploadID, 2, "0", null);
-    } catch (OS3Exception ex) {
-      assertEquals(S3ErrorTable.NO_SUCH_UPLOAD.getErrorMessage(),
-          ex.getErrorMessage());
-    }
+    String unknownUploadId = uploadID + "-unknown";
+    OS3Exception ex = assertThrows(OS3Exception.class,
+        () -> rest.get(OzoneConsts.S3_BUCKET, OzoneConsts.KEY, 0,
+            unknownUploadId, 2, "0", null));
+    assertEquals(S3ErrorTable.NO_SUCH_UPLOAD.getErrorMessage(),
+        ex.getErrorMessage());
   }
 }

@@ -19,8 +19,10 @@ package org.apache.hadoop.ozone.om.helpers;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.UUID;
 import org.apache.hadoop.hdds.client.RatisReplicationConfig;
@@ -51,29 +53,17 @@ public class TestOmMultipartKeyInfoCodec
                     HddsProtos.ReplicationFactor.THREE))
         .build();
 
-    byte[] data = new byte[0];
-    try {
-      data = codec.toPersistedFormat(omMultipartKeyInfo);
-    } catch (java.io.IOException e) {
-      e.printStackTrace();
-    }
+    byte[] data = assertDoesNotThrow(
+        () -> codec.toPersistedFormat(omMultipartKeyInfo));
     assertNotNull(data);
 
-    OmMultipartKeyInfo multipartKeyInfo = null;
-    try {
-      multipartKeyInfo = codec.fromPersistedFormat(data);
-    } catch (java.io.IOException e) {
-      e.printStackTrace();
-    }
+    OmMultipartKeyInfo multipartKeyInfo = assertDoesNotThrow(
+        () -> codec.fromPersistedFormat(data));
     assertEquals(omMultipartKeyInfo, multipartKeyInfo);
 
-    // When random byte data passed returns null.
-    try {
-      codec.fromPersistedFormat("random".getBytes(UTF_8));
-    } catch (IllegalArgumentException ex) {
-      assertThat(ex).hasMessage("Can't encode the the raw data from the byte array");
-    } catch (java.io.IOException e) {
-      e.printStackTrace();
-    }
+    // Random bytes are rejected with a descriptive IllegalArgumentException.
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+        () -> codec.fromPersistedFormat("random".getBytes(UTF_8)));
+    assertThat(ex).hasMessage("Can't encode the the raw data from the byte array");
   }
 }

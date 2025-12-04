@@ -18,12 +18,15 @@
 package org.apache.hadoop.ozone.s3.endpoint;
 
 import static java.net.HttpURLConnection.HTTP_CONFLICT;
-import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static org.apache.hadoop.ozone.s3.exception.S3ErrorTable.BUCKET_ALREADY_EXISTS;
-import static org.apache.hadoop.ozone.s3.exception.S3ErrorTable.MALFORMED_HEADER;
+import static org.apache.hadoop.ozone.s3.exception.S3ErrorTable.INVALID_ARGUMENT;
+import static org.apache.hadoop.ozone.s3.exception.S3ErrorTable.INVALID_REQUEST;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import javax.ws.rs.core.Response;
 import org.apache.hadoop.ozone.OzoneConsts;
@@ -32,6 +35,7 @@ import org.apache.hadoop.ozone.client.OzoneClientStub;
 import org.apache.hadoop.ozone.s3.exception.OS3Exception;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import javax.ws.rs.core.HttpHeaders;
 
 /**
  * This class test Create Bucket functionality.
@@ -40,6 +44,7 @@ public class TestBucketPut {
 
   private String bucketName = OzoneConsts.BUCKET;
   private BucketEndpoint bucketEndpoint;
+  private HttpHeaders headers;
 
   @BeforeEach
   public void setup() throws Exception {
@@ -51,16 +56,17 @@ public class TestBucketPut {
     bucketEndpoint = EndpointBuilder.newBucketEndpointBuilder()
         .setClient(clientStub)
         .build();
+
+    headers = mock(HttpHeaders.class);
+    when(headers.getHeaderString(anyString())).thenReturn(null);
+    bucketEndpoint.setHeaders(headers);
   }
 
   @Test
   public void testBucketFailWithAuthHeaderMissing() throws Exception {
-    try {
-      bucketEndpoint.put(bucketName, null, null);
-    } catch (OS3Exception ex) {
-      assertEquals(HTTP_NOT_FOUND, ex.getHttpCode());
-      assertEquals(MALFORMED_HEADER.getCode(), ex.getCode());
-    }
+    OS3Exception ex = assertThrows(OS3Exception.class,
+        () -> bucketEndpoint.put(bucketName, "acl", null));
+    assertEquals(INVALID_REQUEST.getCode(), ex.getCode());
   }
 
   @Test
@@ -78,11 +84,9 @@ public class TestBucketPut {
 
   @Test
   public void testBucketFailWithInvalidHeader() throws Exception {
-    try {
-      bucketEndpoint.put(bucketName, null, null);
-    } catch (OS3Exception ex) {
-      assertEquals(HTTP_NOT_FOUND, ex.getHttpCode());
-      assertEquals(MALFORMED_HEADER.getCode(), ex.getCode());
-    }
+    when(headers.getHeaderString(S3Acl.GRANT_READ)).thenReturn("id");
+    OS3Exception ex = assertThrows(OS3Exception.class,
+        () -> bucketEndpoint.put(bucketName, "acl", null));
+    assertEquals(INVALID_ARGUMENT.getCode(), ex.getCode());
   }
 }
