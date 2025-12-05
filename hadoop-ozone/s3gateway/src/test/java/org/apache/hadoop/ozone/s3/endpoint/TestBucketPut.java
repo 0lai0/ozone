@@ -52,14 +52,17 @@ public class TestBucketPut {
     //Create client stub and object store stub.
     OzoneClient clientStub = new OzoneClientStub();
 
+    headers = mock(HttpHeaders.class);
+    when(headers.getHeaderString(anyString())).thenReturn(null);
+
     // Create HeadBucket and setClient to OzoneClientStub
     bucketEndpoint = EndpointBuilder.newBucketEndpointBuilder()
         .setClient(clientStub)
+        .setHeaders(headers)
         .build();
 
-    headers = mock(HttpHeaders.class);
-    when(headers.getHeaderString(anyString())).thenReturn(null);
-    bucketEndpoint.setHeaders(headers);
+    // Ensure EndpointBase wiring (auth/signature) happens in tests.
+    bucketEndpoint.initialization();
   }
 
   @Test

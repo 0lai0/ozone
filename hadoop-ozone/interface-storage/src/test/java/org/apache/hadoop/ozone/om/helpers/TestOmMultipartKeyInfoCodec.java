@@ -27,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.util.UUID;
 import org.apache.hadoop.hdds.client.RatisReplicationConfig;
 import org.apache.hadoop.hdds.protocol.proto.HddsProtos;
+import org.apache.hadoop.hdds.utils.db.CodecException;
 import org.apache.hadoop.hdds.utils.db.Codec;
 import org.apache.hadoop.hdds.utils.db.Proto2CodecTestBase;
 import org.apache.hadoop.util.Time;
@@ -61,9 +62,9 @@ public class TestOmMultipartKeyInfoCodec
         () -> codec.fromPersistedFormat(data));
     assertEquals(omMultipartKeyInfo, multipartKeyInfo);
 
-    // Random bytes are rejected with a descriptive IllegalArgumentException.
-    IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+    // Random bytes are rejected with a descriptive CodecException.
+    CodecException ex = assertThrows(CodecException.class,
         () -> codec.fromPersistedFormat("random".getBytes(UTF_8)));
-    assertThat(ex).hasMessage("Can't encode the the raw data from the byte array");
+    assertThat(ex).hasMessageContaining("Failed to deserialize rawData");
   }
 }

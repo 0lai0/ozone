@@ -63,6 +63,8 @@ public class TestListParts {
         .setHeaders(headers)
         .setClient(client)
         .build();
+    // Ensure EndpointBase wiring (auth/signature) happens in tests.
+    rest.initialization();
 
     Response response = rest.initializeMultipartUpload(OzoneConsts.S3_BUCKET,
         OzoneConsts.KEY);
