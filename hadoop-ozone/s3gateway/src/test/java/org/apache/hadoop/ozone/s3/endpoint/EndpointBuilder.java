@@ -49,6 +49,9 @@ public class EndpointBuilder<T extends EndpointBase> {
     this.identifier = new RequestIdentifier();
     this.signatureInfo = mock(SignatureInfo.class);
     when(signatureInfo.isSignPayload()).thenReturn(true);
+    when(signatureInfo.getStringToSign()).thenReturn("");
+    when(signatureInfo.getSignature()).thenReturn("");
+    when(signatureInfo.getAwsAccessId()).thenReturn("test");
   }
 
   public EndpointBuilder<T> setBase(T base) {
